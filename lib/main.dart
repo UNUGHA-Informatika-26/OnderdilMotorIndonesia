@@ -14,17 +14,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Diambil dari --dart-define-from-file saat run/build (lihat
-  // config/dev.json.example). Kalau tidak di-supply, pakai nilai
-  // default di bawah supaya `flutter run` biasa tetap jalan.
+  // config/dev.json.example). Harus di-supply via:
+  //   flutter run --dart-define-from-file=config/dev.json
+  // atau di CI/CD environment variables.
   await Supabase.initialize(
-    url: const String.fromEnvironment(
-      'SUPABASE_URL',
-      defaultValue: 'https://cigaiqtzqgpzlfftegdx.supabase.co',
-    ),
-    anonKey: const String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-      defaultValue: 'sb_publishable_AOS93-tjSuP3L3p4KNRBrw_RI_pLGLa',
-    ),
+    url: const String.fromEnvironment('SUPABASE_URL'),
+    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
   );
 
   runApp(const OEMCatalogApp());

@@ -31,9 +31,20 @@ sehingga setiap role hanya dapat mengakses data sesuai haknya.
 ## Cara Menjalankan
 
 1. Install Flutter SDK & NDK Android
-2. Buat file `config/dev.json` berisi credential Supabase kamu:
+2. Salin template konfigurasi:
+   ```bash
+   cp config/dev.json.example config/dev.json
+   ```
+3. Edit `config/dev.json` dengan kredensial Supabase kamu:
    ```json
    {
-     "SUPABASE_URL": "isi-url-supabase",
-     "SUPABASE_ANON_KEY": "isi-anon-key"
+     "SUPABASE_URL": "https://your-project.supabase.co",
+     "SUPABASE_ANON_KEY": "your-anon-key"
    }
+   ```
+   (File `config/dev.json` sudah di-gitignore, tidak akan ter-commit.)
+4. Jalankan dengan:
+   ```bash
+   flutter run --dart-define-from-file=config/dev.json
+   ```
+   Atau set `SUPABASE_URL` & `SUPABASE_ANON_KEY` sebagai environment variable di CI/CD.
