@@ -25,7 +25,7 @@ flowchart TD
     FillForm --> Validate{Form Valid?}
     Validate -- Tidak --> FillForm
     Validate -- Ya --> Checkout[Checkout via RPC]
-    Checkout --> OrderCreated[Pesanan dibuat (pending)]
+    Checkout --> OrderCreated["Pesanan dibuat (pending)"]
     OrderCreated --> PayScreen[ Buka Upload Bukti ]
     PayScreen --> PayChoice{Upload Bukti?}
     PayChoice -- Ya --> Upload[Upload ke Storage]
