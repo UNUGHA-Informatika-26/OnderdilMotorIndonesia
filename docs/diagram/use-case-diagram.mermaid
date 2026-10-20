@@ -48,10 +48,10 @@ flowchart TD
     Admin --> UC14
 
     %% Include relationships
-    UC5 ..-> UC4 : include
-    UC6 ..-> UC7 : extends
-    UC12 ..-> UC2 : include
-    UC14 ..-> UC13 : include
+    UC5 -.->|include| UC4
+    UC6 -.->|extends| UC7
+    UC12 -.->|include| UC2
+    UC14 -.->|include| UC13
 
     %% Style
     style Customer fill:#f9d949,stroke:#333,stroke-width:2px

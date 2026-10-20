@@ -12,7 +12,7 @@ flowchart TD
     RoleCheck -- admin --> Admin[Panel Admin]
 
     %% Customer flow
-    Catalog --> Search[Cari Sparepart (TF-IDF)]
+    Catalog --> Search["Cari Sparepart (TF-IDF)"]
     Search --> Add{Stok > 0?}
     Add -- Ya --> AddCart[Tambah ke Keranjang]
     Add -- Tidak --> Search
@@ -39,11 +39,11 @@ flowchart TD
     %% Admin flow
     Admin --> AdminView[Lihat Katalog]
     AdminView --> AdminAdd{CRUD?}
-    AdminAdd -- Tambah --> AdminForm[Form: foto, nama, PN, kategori, harga, stok]
+    AdminAdd -- Tambah --> AdminForm["Form: foto, nama, PN, kategori, harga, stok"]
     AdminAdd -- Edit --> AdminForm
     AdminForm --> AdminSave[Simpan ke DB]
     AdminSave --> AdminView
-    AdminAdd -- Hapus --> AdminDelete[Konfirmasi → Hapus]
+    AdminAdd -- Hapus --> AdminDelete[Konfirmasi - Hapus]
     AdminDelete --> AdminView
     AdminView --> AdminOrders[Kelola Pesanan]
     AdminOrders --> AdminStatus[Ubah status pesanan]
