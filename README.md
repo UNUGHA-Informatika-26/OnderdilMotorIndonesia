@@ -6,7 +6,7 @@
 ## Anggota Kelompok
 
 - Muhammad Azfa Eka Satria — 23EO10001 (Ketua)
-- [Nama Anggota 2] — [NIM]
+- [Wildan Fadhillah] — [23EO10002]
 - [Nama Anggota 3] — [NIM]
 - [Nama Anggota 4] — [NIM]
 - [Nama Anggota 5] — [NIM]
