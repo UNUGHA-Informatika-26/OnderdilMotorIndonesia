@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 config/dev.json
+config/test_accounts.json
 
 # IntelliJ related
 *.iml

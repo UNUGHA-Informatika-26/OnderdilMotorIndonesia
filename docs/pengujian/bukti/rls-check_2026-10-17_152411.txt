@@ -1,0 +1,26 @@
+=== RLS Matrix Check - OEM Sparepart Catalog ===
+Target : https://cigaiqtzqgpzlfftegdx.supabase.co
+Waktu  : 2026-10-17 15:24:04
+
+Login customer ... OK
+Login warehouse ... OK
+Login admin ... OK
+
+[PASS  ] S-01 Customer membaca parts - HTTP 200, contoh 4 baris
+[PASS  ] S-02 Customer INSERT parts ditolak - HTTP 403
+[PASS  ] S-03 Customer UPDATE harga parts ditolak - 0 baris terpengaruh
+[PASS  ] S-05 Customer DELETE parts ditolak - 0 baris terhapus
+[PASS  ] S-04a Warehouse UPDATE harga parts ditolak (spec: stock only) - ditolak TRIGGER database (HTTP 400): "Staff gudang hanya boleh mengubah stok"
+[FAIL  ] S-04b Warehouse UPDATE stok parts diizinkan - 0 baris - update stok seharusnya diizinkan
+[PASS  ] S-02b Admin INSERT parts diizinkan - HTTP 201
+[PASS  ] S-05b Admin DELETE parts diizinkan (cleanup) - part tes berhasil dihapus
+[PASS  ] S-09a Warehouse membaca semua orders - HTTP 200 (5 baris)
+[PASS  ] S-08 Customer TIDAK bisa membaca order orang lain - order 0d4fbb8f-65df-4956-b43a-d35af891e203 tidak terlihat
+[PASS  ] S-06 Customer hanya melihat cart miliknya sendiri - tidak ada baris user lain; isolasi terverifikasi (baris cart warehouse tidak terlihat customer)
+[SKIP  ] S-07 Customer INSERT cart user lain ditolak - butuh customer2 (opsional) + data parts
+[PASS  ] S-25 Customer TIDAK bisa ubah role sendiri - update role ditolak (0 baris)
+[INFO  ] I-01  profiles terbatas ke pemilik sendiri
+[INFO  ] I-02  RPC get_email_by_username bisa resolve username lain -> username enumeration (by-design untuk login; catat sebagai risiko privasi rendah)
+[INFO  ] I-03  Tes RPC checkout_cart (transaksi stok) dicakup checklist manual M-06 - jalur app
+
+Ringkasan: 11 PASS | 0 TEMUAN | 1 FAIL | 1 SKIP

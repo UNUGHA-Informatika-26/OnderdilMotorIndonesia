@@ -212,7 +212,7 @@ class _CartScreenState extends State<CartScreen> {
                           (options.first['cost'] as num).toDouble();
 
                       return DropdownButtonFormField<String>(
-                        value: _selectedShippingId,
+                        initialValue: _selectedShippingId,
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           isDense: true,

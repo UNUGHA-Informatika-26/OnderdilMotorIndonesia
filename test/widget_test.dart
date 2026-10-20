@@ -1,52 +1,35 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+// Widget test — Splash screen.
+// Mengganti template bawaan Flutter (counter test) yang tidak relevan
+// dengan aplikasi ini. Test case terkait: rencana-pengujian.md W-03.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:oem_sparepart_catalog/splash_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const _CounterApp());
+  testWidgets('Splash tampil 2 detik lalu pindah ke halaman berikutnya',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: SplashScreen(next: _HalamanTujuan()),
+    ));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Splash terlihat: ikon motor + judul aplikasi.
+    expect(find.byIcon(Icons.two_wheeler), findsOneWidget);
+    expect(find.text('OEM Parts Catalog'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Majukan waktu 2 detik → Timer pemicu navigasi menyala,
+    // lalu 1 detik lagi untuk menyelesaikan animasi transisi.
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 1));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.text('Halaman Tujuan'), findsOneWidget);
   });
 }
 
-class _CounterApp extends StatefulWidget {
-  const _CounterApp();
-
-  @override
-  State<_CounterApp> createState() => _CounterAppState();
-}
-
-class _CounterAppState extends State<_CounterApp> {
-  int _counter = 0;
+class _HalamanTujuan extends StatelessWidget {
+  const _HalamanTujuan();
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Center(child: Text('$_counter')),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => setState(() => _counter++),
-          child: const Icon(Icons.add),
-        ),
-      ),
-    );
+    return const Scaffold(body: Center(child: Text('Halaman Tujuan')));
   }
 }

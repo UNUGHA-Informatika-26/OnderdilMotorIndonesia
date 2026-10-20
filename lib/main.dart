@@ -19,7 +19,7 @@ Future<void> main() async {
   // atau di CI/CD environment variables.
   await Supabase.initialize(
     url: const String.fromEnvironment('SUPABASE_URL'),
-    anonKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
+    publishableKey: const String.fromEnvironment('SUPABASE_ANON_KEY'),
   );
 
   runApp(const OEMCatalogApp());
@@ -94,7 +94,7 @@ class _RoleRouterState extends State<RoleRouter> {
           );
         }
         final role = snapshot.data ?? 'customer';
-        if (role == 'admin' || role == 'warehouse') {
+        if (role == 'admin') {
           return AdminPartsScreen(role: role);
         }
         return const PartsCatalogScreen();
@@ -286,7 +286,7 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
                                     ? Image.network(
                                         part['image_url'] as String,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
+                                        errorBuilder: (_, _, _) =>
                                             const Icon(
                                               Icons.build_circle_outlined,
                                               size: 48,

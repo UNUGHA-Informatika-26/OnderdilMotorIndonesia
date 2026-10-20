@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:oem_sparepart_catalog/csv_utils.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final _db = Supabase.instance.client;
@@ -63,50 +64,11 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
   }
 
   double get _totalRevenue {
-    return _reportData.fold<double>(0.0, (sum, o) {
-      // Omset = uang yang benar-benar sudah diterima: pembayaran sudah
-      // diverifikasi DAN pesanan tidak dibatalkan. (Versi lama memakai
-      // "atau", sehingga pesanan yang sudah dibayar lalu dibatalkan
-      // tetap ikut terhitung.)
-      if (o['payment_status'] == 'verified' && o['status'] != 'cancelled') {
-        return sum + (o['total'] as num? ?? 0).toDouble();
-      }
-      return sum;
-    });
+    return salesRevenue(_reportData);
   }
 
   String _generateCsv() {
-    final buffer = StringBuffer();
-    // CSV Header
-    buffer.writeln('ID Pesanan,Tanggal,Pelanggan,Status Pesanan,Status Pembayaran,Total Nilai');
-
-    for (final order in _reportData) {
-      final id = (order['id'] ?? '').toString();
-      final date = DateTime.tryParse((order['created_at'] ?? '').toString())
-              ?.toLocal()
-              .toString() ??
-          '';
-      final customer = (order['shipping_name'] ?? '-').toString();
-      final status = (order['status'] ?? '-').toString();
-      final payStatus = (order['payment_status'] ?? '-').toString();
-      final total = (order['total'] as num? ?? 0).toDouble().toStringAsFixed(2);
-
-      buffer.writeln(
-        [id, date, customer, status, payStatus, total].map(_csvCell).join(','),
-      );
-    }
-    return buffer.toString();
-  }
-
-  /// Aman untuk CSV: semua field diberi tanda kutip (koma / kutip / baris
-  /// baru tidak merusak kolom), dan teks yang diawali = + - @ diberi
-  /// awalan ' supaya tidak dieksekusi sebagai rumus saat dibuka di
-  /// Excel / Google Sheets. Nama penerima diisi bebas oleh customer,
-  /// jadi tanpa ini bisa disusupi rumus (CSV/formula injection).
-  String _csvCell(String value) {
-    var v = value;
-    if (v.isNotEmpty && '=+-@\t\r'.contains(v[0])) v = "'$v";
-    return '"${v.replaceAll('"', '""')}"';
+    return generateSalesCsv(_reportData);
   }
 
   void _exportCsv() {

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'sales_report_screen.dart';
 
 final _db = Supabase.instance.client;
 
 class AdminOrdersScreen extends StatefulWidget {
-  final String role; // 'admin' atau 'warehouse'
+  final String role; // 'admin'
   const AdminOrdersScreen({super.key, this.role = 'admin'});
 
   @override
@@ -13,29 +14,24 @@ class AdminOrdersScreen extends StatefulWidget {
 }
 
 class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
-  final _ordersStream =
-      _db.from('orders').stream(primaryKey: ['id']).order(
-            'created_at',
-            ascending: false,
-          );
+  final _ordersStream = _db
+      .from('orders')
+      .stream(primaryKey: ['id'])
+      .order('created_at', ascending: false);
 
   Future<void> _updateStatus(String orderId, String status) async {
     try {
       await _db.from('orders').update({'status': status}).eq('id', orderId);
     } on PostgrestException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal: ${e.message}')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal: ${e.message}')));
       }
     }
   }
 
   Future<List<Map<String, dynamic>>> _fetchItems(String orderId) async {
-    final data = await _db.from('order_items').select().eq(
-          'order_id',
-          orderId,
-        );
+    final data = await _db.from('order_items').select().eq('order_id', orderId);
     return List<Map<String, dynamic>>.from(data as List);
   }
 
@@ -43,21 +39,21 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     try {
       await _db
           .from('orders')
-          .update({'payment_status': status}).eq('id', orderId);
+          .update({'payment_status': status})
+          .eq('id', orderId);
     } on PostgrestException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal: ${e.message}')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal: ${e.message}')));
       }
     }
   }
 
   Future<void> _viewProof(String? proofPath) async {
     if (proofPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Belum ada bukti transfer')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Belum ada bukti transfer')));
       return;
     }
     try {
@@ -67,17 +63,13 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       if (!mounted) return;
       showDialog(
         context: context,
-        builder: (_) => Dialog(
-          child: InteractiveViewer(
-            child: Image.network(signedUrl),
-          ),
-        ),
+        builder: (_) =>
+            Dialog(child: InteractiveViewer(child: Image.network(signedUrl))),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat bukti: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal memuat bukti: $e')));
       }
     }
   }
@@ -190,8 +182,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                   trailing: Chip(
                     label: Text(
                       _statusLabel(status),
-                      style:
-                          const TextStyle(color: Colors.white, fontSize: 11),
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
                     ),
                     backgroundColor: _statusColor(status),
                     padding: EdgeInsets.zero,
@@ -208,8 +199,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                               child: SizedBox(
                                 height: 16,
                                 width: 16,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             ),
                           );
@@ -237,8 +229,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                         children: [
                           Text(
                             'Dikirim ke: ${order['shipping_name'] ?? '-'}',
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           Text(order['shipping_address'] ?? '-'),
                           Text(order['shipping_phone'] ?? '-'),
@@ -254,9 +245,18 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                           Wrap(
                             spacing: 8,
                             children: [
-                              _statusButton(orderId, 'pending', status),
-                              _statusButton(orderId, 'completed', status),
-                              _statusButton(orderId, 'cancelled', status),
+                              _statusButton(
+                                orderId,
+                                'completed',
+                                status,
+                                paymentStatus,
+                              ),
+                              _statusButton(
+                                orderId,
+                                'cancelled',
+                                status,
+                                paymentStatus,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -298,20 +298,18 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                                   icon: const Icon(Icons.image_outlined),
                                   label: const Text('Lihat Bukti'),
                                 ),
-                              if (isFullAdmin && paymentStatus == 'uploaded') ...[
+                              if (isFullAdmin &&
+                                  paymentStatus == 'uploaded' &&
+                                  status == 'pending') ...[
                                 FilledButton.icon(
-                                  onPressed: () => _updatePaymentStatus(
-                                    orderId,
-                                    'verified',
-                                  ),
+                                  onPressed: () =>
+                                      _updatePaymentStatus(orderId, 'verified'),
                                   icon: const Icon(Icons.check),
                                   label: const Text('Verifikasi'),
                                 ),
                                 OutlinedButton.icon(
-                                  onPressed: () => _updatePaymentStatus(
-                                    orderId,
-                                    'rejected',
-                                  ),
+                                  onPressed: () =>
+                                      _updatePaymentStatus(orderId, 'rejected'),
                                   icon: const Icon(
                                     Icons.close,
                                     color: Colors.red,
@@ -337,10 +335,29 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
     );
   }
 
-  Widget _statusButton(String orderId, String value, String current) {
+  Widget _statusButton(
+    String orderId,
+    String value,
+    String current,
+    String paymentStatus,
+  ) {
     final selected = value == current;
+    // Validasi transisi status:
+    // - completed: hanya jika pembayaran sudah verified
+    // - cancelled: hanya dari pending (belum selesai)
+    // - completed & cancelled adalah final state (tidak bisa diubah)
+    bool disabled = selected;
+    if (!selected) {
+      if (value == 'completed' && paymentStatus != 'verified') {
+        disabled = true;
+      } else if (value == 'cancelled' && current == 'completed') {
+        disabled = true;
+      } else if (current == 'cancelled' || current == 'completed') {
+        disabled = true; // final state
+      }
+    }
     return OutlinedButton(
-      onPressed: selected ? null : () => _updateStatus(orderId, value),
+      onPressed: disabled ? null : () => _updateStatus(orderId, value),
       child: Text(_statusLabel(value)),
     );
   }

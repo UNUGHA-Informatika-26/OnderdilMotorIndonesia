@@ -1,0 +1,22 @@
+{
+  "customer": {
+    "email": "ISI_EMAIL_CUSTOMER",
+    "password": "ISI_PASSWORD_CUSTOMER",
+    "username": "ISI_USERNAME_CUSTOMER"
+  },
+  "customer2": {
+    "email": "ISI_EMAIL_CUSTOMER_2",
+    "password": "ISI_PASSWORD_CUSTOMER_2",
+    "username": "ISI_USERNAME_CUSTOMER_2"
+  },
+  "warehouse": {
+    "email": "ISI_EMAIL_WAREHOUSE",
+    "password": "ISI_PASSWORD_WAREHOUSE",
+    "username": "staffgudang"
+  },
+  "admin": {
+    "email": "ISI_EMAIL_ADMIN",
+    "password": "ISI_PASSWORD_ADMIN",
+    "username": "ISI_USERNAME_ADMIN"
+  }
+}

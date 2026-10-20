@@ -9,7 +9,7 @@ import 'admin_orders_screen.dart';
 final _db = Supabase.instance.client;
 
 class AdminPartsScreen extends StatefulWidget {
-  final String role; // 'admin' atau 'warehouse'
+  final String role; // 'admin'
   const AdminPartsScreen({super.key, this.role = 'admin'});
 
   @override
@@ -84,7 +84,7 @@ class _AdminPartsScreenState extends State<AdminPartsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final roleTitle = _isFullAdmin ? 'Admin' : 'Staff Gudang';
+    final roleTitle = 'Admin';
 
     return Scaffold(
       appBar: AppBar(
