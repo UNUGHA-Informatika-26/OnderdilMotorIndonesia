@@ -6,7 +6,7 @@
 ## Anggota Kelompok
 
 - Muhammad Azfa Eka Satria — 23EO10001 (Ketua)
-- [Wildan Fadhillah] — 23EO10002
+- Wildan Fadhillah — 23EO10002
 
 ---
 
