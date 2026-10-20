@@ -58,9 +58,9 @@ Customer → Flutter App → Supabase (Auth, Postgres, Realtime, Storage) → Ba
 
 | Jenis | Berkas | Keterangan |
 |---|---|---|
-| Use Case | docs/diagram/use-case-diagram.mermaid | Aktor: Customer, Admin. 14 use case. |
-| Sequence (checkout) | docs/diagram/sequence-diagram.mermaid | Alur checkout: cart → RPC → order → upload bukti → verifikasi |
-| Activity (customer/admin) | docs/diagram/activity-diagram.mermaid | Alur customer: cari → keranjang → checkout → bayar. Alur admin: CRUD → kelola pesanan → laporan |
+| Use Case | docs/diagram/use-case-diagram.md | Aktor: Customer, Admin. 14 use case. |
+| Sequence (checkout) | docs/diagram/sequence-diagram.md | Alur checkout: cart → RPC → order → upload bukti → verifikasi |
+| Activity (customer/admin) | docs/diagram/activity-diagram.md | Alur customer: cari → keranjang → checkout → bayar. Alur admin: CRUD → kelola pesanan → laporan |
 
 ---
 

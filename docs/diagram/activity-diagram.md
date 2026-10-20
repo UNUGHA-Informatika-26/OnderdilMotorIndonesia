@@ -1,6 +1,8 @@
-%% Activity Diagram — Alur Customer (Katalog → Checkout → Pembayaran)
-%% Dibuat untuk tugas Analisis dan Pengujian Sistem
+# Activity Diagram — Alur Customer & Admin (Katalog → Checkout → Pembayaran)
 
+> Dibuat untuk tugas Analisis dan Pengujian Sistem
+
+```mermaid
 flowchart TD
     Start([Mulai]) --> A1{Cek Sesi Supabase}
 
@@ -63,3 +65,4 @@ flowchart TD
     style Submit fill:#1565C0,stroke:#fff,color:#fff
     style AdminVerify fill:#2E7D32,stroke:#fff,color:#fff
     style AdminReject fill:#C62828,stroke:#fff,color:#fff
+```

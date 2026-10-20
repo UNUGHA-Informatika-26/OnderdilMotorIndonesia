@@ -1,6 +1,8 @@
-%% Sequence Diagram — Alur Checkout Customer
-%% Dibuat untuk tugas Analisis dan Pengujian Sistem
+# Sequence Diagram — Alur Checkout Customer
 
+> Dibuat untuk tugas Analisis dan Pengujian Sistem
+
+```mermaid
 sequenceDiagram
     autonumber
     actor Customer as Customer
@@ -17,7 +19,7 @@ sequenceDiagram
     App->>App: Validasi form (nama, telepon, alamat, kurir)
 
     Note over App,RPC: 2. Buat pesanan via RPC transaction
-    App->>RPC: checkout_cart(items, shipping_name, shipping_phone,<br>shipping_address, shipping_option_id)
+    App->>RPC: checkout_cart(items, shipping_name, shipping_phone, shipping_address, shipping_option_id)
     RPC->>DB: INSERT orders (status=pending, payment_status=pending)
     RPC->>DB: INSERT order_items (per item)
     RPC->>DB: UPDATE parts SET stock = stock - qty (per item)
@@ -52,3 +54,4 @@ sequenceDiagram
     Admin->>DB: UPDATE orders SET payment_status='verified' WHERE id=orderId
     DB-->>Admin: ok
     Admin->>Customer: Notifikasi "Pembayaran diverifikasi"
+```

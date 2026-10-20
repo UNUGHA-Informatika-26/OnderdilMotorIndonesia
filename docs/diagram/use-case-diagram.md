@@ -1,6 +1,8 @@
-%% Use Case Diagram — Onderdil Motor Indonesia
-%% Dibuat untuk tugas Analisis dan Pengujian Sistem
+# Use Case Diagram — Onderdil Motor Indonesia
 
+> Dibuat untuk tugas Analisis dan Pengujian Sistem
+
+```mermaid
 flowchart TD
     %% Actors
     Customer([Customer])
@@ -57,3 +59,4 @@ flowchart TD
     style Customer fill:#f9d949,stroke:#333,stroke-width:2px
     style Admin fill:#e699c7,stroke:#333,stroke-width:2px
     style System fill:#f0f0f0,stroke:#333,stroke-width:2px
+```
