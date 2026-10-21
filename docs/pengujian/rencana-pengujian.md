@@ -448,15 +448,19 @@ test('S-02: customer TIDAK BISA insert parts', () async {
       reason: 'RLS "Only full admin can insert parts" harus aktif');
 });
 
-test('S-04: warehouse hanya boleh update field stock', () async {
-  final client = await _loginAs('wh1@test.dev', 'password123');
-  await client.from('parts').update({'stock': 42}).eq('id', partId);
+test('S-04: admin boleh update parts, customer ditolak', () async {
+  // Admin bisa update stock
+  final adminClient = await _loginAs('admin1@test.dev', 'password123');
+  await adminClient.from('parts').update({'stock': 42}).eq('id', partId);
+
+  // Customer tidak bisa update stock
+  final custClient = await _loginAs('cust1@test.dev', 'password123');
   var blocked = false;
   try {
-    await client.from('parts').update({'price': 1}).eq('id', partId);
+    await custClient.from('parts').update({'stock': 42}).eq('id', partId);
   } on PostgrestException {
     blocked = true;
   }
-  expect(blocked, isTrue, reason: 'UPDATE dibatasi kolom stock saja');
+  expect(blocked, isTrue, reason: 'RLS: customer tidak boleh update parts');
 });
 ```
