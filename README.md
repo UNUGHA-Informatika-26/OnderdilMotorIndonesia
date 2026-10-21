@@ -1,5 +1,4 @@
-# Analisis & Pengujian Sistem — Onderdil Motor Indonesia
-
+# Sistem Informasi Katalog dan Penjualan Sparepart Motor OEM Berbasis Mobile
 > Mata Kuliah: Analisis & Pengujian Sistem (IF7A)
 > Ketua Kelompok: Muhammad Azfa Eka Satria — 23EO10001
 
