@@ -45,9 +45,11 @@ sequenceDiagram
     RPC-->>Pay: success
 
     Note over Pay,Realtime: 7. Notifikasi & kembali
+    Admin->>Realtime: subscribe(channel_orders)
+    Realtime-->>Admin: ok (listening)
     Pay->>Customer: Snackbar "Bukti terkirim, menunggu verifikasi"
     Pay->>App: popUntil ke katalog
-    Realtime-->>Admin: Realtime push (payment_status changed)
+    Realtime-->>Admin: notify(status_changed) — payment_status='uploaded'
     Admin->>App: Notifikasi order perlu verifikasi
 
     Note over Admin,DB: 8. Admin verifikasi (sequence terpisah)

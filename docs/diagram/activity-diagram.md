@@ -10,16 +10,16 @@ flowchart TD
     Login --> A1
 
     A1 -- Login --> RoleCheck{Role Profil}
-    RoleCheck -- customer --> Catalog[ Buka Katalog ]
-    RoleCheck -- admin --> Admin[Panel Admin]
+    RoleCheck -- "[role == customer]" --> Catalog[ Buka Katalog ]
+    RoleCheck -- "[role == admin]" --> Admin[Panel Admin]
 
     %% Customer flow
     Catalog --> Search["Cari Sparepart (TF-IDF)"]
     Search --> Add{Stok > 0?}
     Add -- Ya --> AddCart[Tambah ke Keranjang]
     Add -- Tidak --> Search
-    AddCart --> Search
-    Search --> CartOpen[Buka Keranjang]
+    AddCart --> Catalog
+    Catalog --> CartOpen[Buka Keranjang]
 
     CartOpen --> CartEmpty{Keranjang Kosong?}
     CartEmpty -- Ya --> Catalog
@@ -39,7 +39,8 @@ flowchart TD
     History --> End([Selesai])
 
     %% Admin flow
-    Admin --> AdminView[Lihat Katalog]
+    Admin --> AdminMenu{Menu Admin}
+    AdminMenu -- "Kelola Produk" --> AdminView[Lihat Katalog]
     AdminView --> AdminAdd{CRUD?}
     AdminAdd -- Tambah --> AdminForm["Form: foto, nama, PN, kategori, harga, stok"]
     AdminAdd -- Edit --> AdminForm
@@ -47,14 +48,16 @@ flowchart TD
     AdminSave --> AdminView
     AdminAdd -- Hapus --> AdminDelete[Konfirmasi - Hapus]
     AdminDelete --> AdminView
-    AdminView --> AdminOrders[Kelola Pesanan]
+    AdminView --> AdminMenu
+    AdminMenu -- "Kelola Pesanan" --> AdminOrders[Kelola Pesanan]
     AdminOrders --> AdminStatus[Ubah status pesanan]
     AdminStatus --> AdminPay{Verifikasi?}
     AdminPay -- Ya --> AdminVerify[Verifikasi]
     AdminPay -- Tidak --> AdminReject[Tolak]
     AdminVerify --> AdminReport[Lihat Bukti]
     AdminReject --> AdminReport
-    AdminReport --> AdminLap[Laporan Penjualan]
+    AdminReport --> AdminMenu
+    AdminMenu -- "Laporan" --> AdminLap[Laporan Penjualan]
     AdminLap --> AdminCsv[Export CSV]
     AdminCsv --> End
 

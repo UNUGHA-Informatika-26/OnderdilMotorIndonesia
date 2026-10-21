@@ -52,7 +52,6 @@ flowchart TD
     %% Include relationships
     UC5 -.->|include| UC4
     UC6 -.->|extends| UC7
-    UC12 -.->|include| UC2
     UC14 -.->|include| UC13
 
     %% Style

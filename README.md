@@ -80,6 +80,42 @@ Lihat detail: [`docs/arsitektur/architecture-design.md`](docs/arsitektur/archite
 
 ---
 
+## Supabase sebagai Backend-as-a-Service (BaaS)
+
+### Mengapa Supabase (bukan Laravel / backend custom)?
+
+Supabase adalah **Backend-as-a-Service (BaaS)** berbasis open-source yang menyediakan seluruh infrastruktur backend dalam satu platform. Untuk project ini, Supabase dipilih karena:
+
+| Kriteria | Supabase (Pilihan Saat Ini) |
+|---|---|
+| **Kecepatan Pengembangan** | Sangat cepat — Auth, Realtime, Storage built-in |
+| **Logika Bisnis** | RPC function (`checkout_cart`) + Service class (`PaymentUploadService`) di client |
+| **Realtime** | Bawaan (WebSocket) — live sync cart & orders |
+| **Keamanan** | RLS (Row Level Security) di database level |
+| **Storage** | Bucket built-in (part-images, payment-proofs) |
+| **Autentikasi** | Supabase Auth (email/password, username via metadata) |
+
+### Komponen Supabase yang Digunakan
+
+| Komponen | Fungsi di Project | Contoh Penggunaan |
+|---|---|---|
+| **Auth** | Login/register, session management, username→email resolve | `get_email_by_username` RPC |
+| **Postgres** | Database relasional: `parts`, `profiles`, `cart_items`, `orders`, `order_items`, `shipping_options` | CRUD sparepart, checkout, laporan |
+| **RLS** | Keamanan per-row: customer hanya lihat data miliknya, admin full CRUD | Policy `Only full admin can insert parts` |
+| **Realtime** | Live sync keranjang & status pesanan antar device | `supabase_realtime` channel (cart_items, parts, orders) |
+| **Storage** | Upload & signed URL: foto produk & bukti transfer | Bucket `part-images`, `payment-proofs` (private, signed URL 5 menit) |
+| **RPC** | Logika bisnis atomik di server (transaction) | `checkout_cart` (INSERT order + order_items, UPDATE stock, DELETE cart), `submit_payment_proof` |
+
+### Argumen Feasibility
+
+1. **Logika bisnis tidak di client Flutter** — RPC `checkout_cart` dijalankan di server database (PostgreSQL), atomic: INSERT order → INSERT order_items → UPDATE stock → DELETE cart_items. Jika satu gagal, seluruh transaksi rollback.
+2. **Service-oriented pattern** — `PaymentUploadService` menangani upload bukti transfer dan generate signed URL. Storage provider bisa diganti (AWS S3, Laravel Storage) tanpa mengubah logika bisnis utama.
+3. **Keamanan di database level** — RLS menjamin data isolation per-role, bukan hanya di UI. Customer tidak bisa baca/tulis data orang lain meskipun API dipanggil langsung.
+4. **Realtime built-in** — WebSocket native dari Supabase, tidak perlu setup Pusher/Laravel Reverb. Live sync cart antar device < 3 detik.
+5. **Hybrid approach (jika dosen tidak setuju)** — Bisa gunakan PostgreSQL (Supabase DB) + Laravel API (framework). Database tetap sama, logika routing/auth middleware diatur Laravel. Ini jalan tengah yang menggabungkan kecepatan Flutter dengan fleksibilitas Laravel.
+
+---
+
 ## Cara Menjalankan
 
 1. Install Flutter SDK & NDK Android

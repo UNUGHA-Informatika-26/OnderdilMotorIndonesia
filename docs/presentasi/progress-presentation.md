@@ -54,6 +54,38 @@ Customer → Flutter App → Supabase (Auth, Postgres, Realtime, Storage) → Ba
 
 ---
 
+## Slide 3b: Mengapa Supabase (bukan Laravel)?
+
+### Argumen Feasibility (untuk meredam kekhawatiran dosen):
+
+1. **Logika bisnis di server (RPC checkout_cart)** — bukan sekadar INSERT dari client. RPC menjalankan INSERT orders → INSERT order_items → UPDATE stock → DELETE cart dalam satu transaksi atomik. Jika satu gagal, seluruh transaksi rollback. Ini setara dengan Controller/Service di Laravel.
+
+2. **Service-oriented pattern (PaymentUploadService)** — khusus menangani upload bukti + generate signed URL. Storage provider bisa diganti (AWS S3, Laravel Storage) tanpa ubah logika bisnis utama. Prinsip Separation of Concerns.
+
+3. **Keamanan di database level (RLS)** — Row Level Security menjamin data isolation per-role langsung di Postgres, bukan hanya middleware di aplikasi. Customer tidak bisa baca data orang lain meskipun API dipanggil langsung.
+
+4. **Realtime built-in** — WebSocket native, live sync cart & orders < 3 detik. Tidak perlu setup Pusher/Laravel Reverb.
+
+5. **Hybrid approach (jika dosen tidak setuju)** — Bisa gunakan PostgreSQL (Supabase DB) + Laravel API. Database tetap sama, logika routing/auth middleware diatur Laravel. Jalan tengah yang menggabungkan kecepatan Flutter dengan fleksibilitas Laravel.
+
+### Tabel Perbandingan:
+
+| Kriteria | Supabase |
+|---|---|
+| Kecepatan dev | Sangat cepat (Auth, Realtime, Storage built-in) |
+| Logika bisnis | RPC database / Service class |
+| Realtime | Bawaan (WebSocket, live sync < 3 detik) |
+| Keamanan | RLS di database level |
+| Storage | Bucket built-in (part-images, payment-proofs) |
+| Autentikasi | Supabase Auth (email/password, username) |
+
+### Bukti dari Diagram:
+- **Sequence Diagram** → `checkout_cart` (RPC) + `PaymentUploadService` (service layer)
+- **Use Case Diagram** → Verifikasi pembayaran, CRUD, RLS per-role
+- **Activity Diagram** → Alur admin & customer terpisah
+
+---
+
 ## Slide 4: Diagram
 
 | Jenis | Berkas | Keterangan |
