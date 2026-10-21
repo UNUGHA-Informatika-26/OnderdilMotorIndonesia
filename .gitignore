@@ -14,7 +14,7 @@ migrate_working_dir/
 config/dev.json
 config/test_accounts.json
 seed_parts.sql
-fix_b003_order_transaction.sql
+fix_b003_order_transition.sql
 
 # IntelliJ related
 *.iml
