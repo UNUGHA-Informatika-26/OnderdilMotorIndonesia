@@ -25,8 +25,8 @@ Tujuan pengujian: membuktikan setiap fungsionalitas utama berjalan sesuai spesif
 ### Masalah Bisnis
 1. **Katalog tidak terstruktur** — Customer kesulitan mencari sparepart yang tepat karena katalog masih berupa kertas/PDF tanpa pencarian.
    - *Solusi:* TF-IDF search untuk pencarian berbasis relevansi.
-2. **Keranjang tidak persisten** — Customer kehilangan keranjang jika menutup aplikasi.
-   - *Solusi:* Keranjang berbasis cloud (Supabase) dengan realtime sync.
+2. **Keranjang tidak persisten** — Customer mengalami cart abandonment akibat kehilangan keranjang saat ganti device atau sesi. Hal ini menghambat konversi penjualan dan merusak pengalaman user yang seamless. Analitik bisnis juga tumpah (tidak bisa melacak cart abandonment rate).
+   - *Solusi:* Keranjang berbasis cloud (Supabase). State tersimpan di tabel `cart_items` dengan RLS per-user. Sinkronisasi real-time via Supabase Realtime (WebSocket) memastikan perangkat mana pun menampilkan state terbaru. Optimistic update di Flutter memastikan responsivitas instant. Conflict resolution via timestamp-based merge atau RPC `sync_cart`.
 3. **Checkout manual rentan kesalahan** — Proses checkout via chat/telepon menyebabkan kesalahan stok dan pesanan.
    - *Solusi:* Checkout terintegrasi via RPC `checkout_cart` (transaksi atomik).
 4. **Tidak ada validasi keamanan data** — Tidak ada pembatasan akses antar role.
