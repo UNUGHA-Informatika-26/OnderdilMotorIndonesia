@@ -23,7 +23,7 @@ Tujuan pengujian: membuktikan setiap fungsionalitas utama berjalan sesuai spesif
 ## Desain Proyek — Unified Modeling System (20 poin)
 
 ### Use Case Diagram
-File: [`docs/diagram/use-case-diagram.mermaid`](docs/diagram/use-case-diagram.mermaid)
+File: [`docs/diagram/images/use-case.png`](docs/diagram/images/use-case.png)
 
 Aktors: Customer, Admin
 
@@ -31,12 +31,12 @@ Aktors: Customer, Admin
 - **Admin**: CRUD Sparepart, Kelola Pesanan, Verifikasi/Reject Pembayaran, Laporan Penjualan, Export CSV, Update Stok
 
 ### Sequence Diagram
-File: [`docs/diagram/sequence-diagram.mermaid`](docs/diagram/sequence-diagram.mermaid)
+File: [`docs/diagram/images/sequence.png`](docs/diagram/images/sequence.png)
 
 Alur checkout: Customer → Katalog → Keranjang → Checkout (RPC `checkout_cart`) → Order dibuat, stok berkurang, keranjang kosong → Upload bukti transfer → Admin verifikasi → Status order berubah (realtime).
 
 ### Activity Diagram
-File: [`docs/diagram/activity-diagram.mermaid`](docs/diagram/activity-diagram.mermaid)
+File: [`docs/diagram/images/activity.png`](docs/diagram/images/activity.png)
 
 Alur customer: Cari Sparepart → Cek Stok → Tambah Keranjang → Checkout → Upload Bukti → Tunggu Verifikasi → Selesai
 Alur admin: Login → CRUD Part / Kelola Pesanan / Laporan
