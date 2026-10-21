@@ -80,6 +80,83 @@ Lihat detail: [`docs/arsitektur/architecture-design.md`](docs/arsitektur/archite
 
 ---
 
+## State Management
+
+### Pola yang Digunakan
+- **CartModel** (singleton, `ChangeNotifier`) — state keranjang belanja
+- **TfIdfSearch** (class murni, tanpa dependensi) — pencarian sparepart
+- **FutureBuilder / StreamBuilder** — untuk data async (orders, parts)
+
+### CartModel (Singleton + ChangeNotifier)
+```
+CartModel.instance → add() → notifyListeners() → UI rebuild
+```
+- `add()`: tambah item, cap stok (max 99), skip jika stock = 0
+- `decrement()`: qty turun, hapus jika qty = 1
+- `clear()` / `clearLocal()`: bersihkan memori
+- **Sync DB**: otomatis jika `uid != null` (login), skip jika `uid == null` (test)
+- **Optimistic update**: update UI dulu, sync ke DB menyusul
+
+### Mengapa ChangeNotifier (bukan Riverpod/BLoC)?
+- Lebih sederhana untuk project skala kecil-menengah
+- Tidak perlu dependency tambahan
+- Cukup untuk state keranjang yang single-source
+- Testable: `Supabase.initialize(url: 'http://localhost', anonKey: 'dummy')` → uid null → sync DB ter-skip
+
+---
+
+## API Documentation (RPC)
+
+### 1. `checkout_cart`
+**Deskripsi:** Buat order + order_items, kurangi stok, kosongkan keranjang (atomic transaction).
+
+**Parameter:**
+| Param | Tipe | Keterangan |
+|---|---|---|
+| `p_shipping_name` | text | Nama penerima |
+| `p_shipping_phone` | text | No. telepon |
+| `p_shipping_address` | text | Alamat pengiriman |
+| `p_shipping_option_id` | uuid | ID metode pengiriman |
+| `p_items` | jsonb | Array item: `[{part_id, name, part_number, price, quantity}]` |
+
+**Return:** `uuid` (order_id)
+
+**Error:** `insufficient_stock` jika stok tidak cukup
+
+**Langkah internal:**
+1. INSERT orders (status=pending, payment_status=pending)
+2. INSERT order_items (per item)
+3. UPDATE parts SET stock = stock - qty
+4. DELETE cart_items WHERE user_id = uid
+5. Jika langkah 3 gagal → rollback seluruh transaksi
+
+### 2. `submit_payment_proof`
+**Deskripsi:** Update payment_status ke 'uploaded' + simpan path bukti.
+
+**Parameter:**
+| Param | Tipe | Keterangan |
+|---|---|---|
+| `p_order_id` | uuid | ID order |
+| `p_proof_path` | text | Path file di bucket payment-proofs |
+
+**Return:** `void`
+
+**Error:** `order_not_found` jika order tidak milik user
+
+### 3. `get_email_by_username`
+**Deskripsi:** Resolve username → email untuk login.
+
+**Parameter:**
+| Param | Tipe | Keterangan |
+|---|---|---|
+| `p_username` | text | Username user |
+
+**Return:** `text` (email)
+
+**Error:** `username_not_found` jika tidak ada
+
+---
+
 ## Supabase sebagai Backend-as-a-Service (BaaS)
 
 ### Mengapa Supabase (bukan Laravel / backend custom)?
