@@ -322,7 +322,7 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  '\$${(part['price'] as num).toStringAsFixed(2)}',
+                                  'Rp ${(part['price'] as num).toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     color: Colors.green,
                                     fontWeight: FontWeight.bold,

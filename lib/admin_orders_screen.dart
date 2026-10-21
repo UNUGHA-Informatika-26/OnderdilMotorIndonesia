@@ -177,7 +177,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                   title: Text('Pesanan #${orderId.substring(0, 8)}'),
                   subtitle: Text(
                     '${_formatDate(order['created_at'])}  |  '
-                    'Total: \$${(order['total'] as num).toStringAsFixed(2)}',
+                    'Total: Rp ${(order['total'] as num).toStringAsFixed(2)}',
                   ),
                   trailing: Chip(
                     label: Text(
@@ -214,7 +214,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                                   title: Text(item['part_name'] ?? ''),
                                   trailing: Text(
                                     '${item['quantity']} x '
-                                    '\$${(item['price'] as num).toStringAsFixed(2)}',
+                                    'Rp ${(item['price'] as num).toStringAsFixed(2)}',
                                   ),
                                 ),
                               )

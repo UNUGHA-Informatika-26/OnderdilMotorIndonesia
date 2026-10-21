@@ -156,7 +156,7 @@ class _AdminPartsScreenState extends State<AdminPartsScreen> {
                 ),
                 title: Text(p['name'] ?? ''),
                 subtitle: Text(
-                  'PN: ${p['part_number']}  |  Stok: ${p['stock']}  |  \$$price',
+                  'PN: ${p['part_number']}  |  Stok: ${p['stock']}  |  Rp $price',
                 ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,

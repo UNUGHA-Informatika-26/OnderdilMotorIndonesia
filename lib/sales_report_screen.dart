@@ -90,7 +90,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Total Data: ${_reportData.length} transaksi'),
-            Text('Omset Sukses: \$${_totalRevenue.toStringAsFixed(2)}'),
+            Text('Omset Sukses: Rp ${_totalRevenue.toStringAsFixed(2)}'),
             const SizedBox(height: 12),
             const Text(
               'Anda dapat menyalin teks CSV di bawah atau klik tombol "Salin ke Clipboard" untuk paste ke Excel / Google Sheets:',
@@ -268,7 +268,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text('Omset Selesai', style: TextStyle(fontSize: 12, color: Colors.green)),
-                        Text('\$${_totalRevenue.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+                        Text('Rp ${_totalRevenue.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
                       ],
                     ),
                   ),
@@ -309,7 +309,7 @@ class _SalesReportScreenState extends State<SalesReportScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('\$${total.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text('Rp ${total.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
                                 Text(
                                   status.toUpperCase(),
                                   style: TextStyle(

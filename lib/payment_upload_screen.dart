@@ -135,7 +135,7 @@ class _PaymentUploadScreenState extends State<PaymentUploadScreen> {
                     const Divider(height: 24),
                     _infoRow(
                       'Total',
-                      '\$${widget.totalAmount.toStringAsFixed(2)}',
+                      'Rp ${widget.totalAmount.toStringAsFixed(2)}',
                     ),
                   ],
                 ),

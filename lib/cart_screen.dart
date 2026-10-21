@@ -117,7 +117,7 @@ class _CartScreenState extends State<CartScreen> {
                       child: ListTile(
                         title: Text(item.name),
                         subtitle: Text(
-                          '\$${item.price.toStringAsFixed(2)} x ${item.quantity} = \$${item.subtotal.toStringAsFixed(2)}',
+                          'Rp ${item.price.toStringAsFixed(2)} x ${item.quantity} = Rp ${item.subtotal.toStringAsFixed(2)}',
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -222,7 +222,7 @@ class _CartScreenState extends State<CartScreen> {
                               (o) => DropdownMenuItem(
                                 value: o['id'] as String,
                                 child: Text(
-                                  '${o['name']} — \$${(o['cost'] as num).toStringAsFixed(2)}',
+                                  '${o['name']} — Rp ${(o['cost'] as num).toStringAsFixed(2)}',
                                 ),
                               ),
                             )
@@ -247,14 +247,14 @@ class _CartScreenState extends State<CartScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Subtotal'),
-                      Text('\$${_cart.totalPrice.toStringAsFixed(2)}'),
+                      Text('Rp ${_cart.totalPrice.toStringAsFixed(2)}'),
                     ],
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Ongkir'),
-                      Text('\$${_selectedShippingCost.toStringAsFixed(2)}'),
+                      Text('Rp ${_selectedShippingCost.toStringAsFixed(2)}'),
                     ],
                   ),
                   const Divider(),
@@ -269,7 +269,7 @@ class _CartScreenState extends State<CartScreen> {
                         ),
                       ),
                       Text(
-                        '\$${(_cart.totalPrice + _selectedShippingCost).toStringAsFixed(2)}',
+                        'Rp ${(_cart.totalPrice + _selectedShippingCost).toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
