@@ -20,6 +20,52 @@ Tujuan pengujian: membuktikan setiap fungsionalitas utama berjalan sesuai spesif
 
 ---
 
+## Analisis Masalah (Problem-Oriented)
+
+### Masalah Bisnis
+1. **Katalog tidak terstruktur** — Customer kesulitan mencari sparepart yang tepat karena katalog masih berupa kertas/PDF tanpa pencarian.
+   - *Solusi:* TF-IDF search untuk pencarian berbasis relevansi.
+2. **Keranjang tidak persisten** — Customer kehilangan keranjang jika menutup aplikasi.
+   - *Solusi:* Keranjang berbasis cloud (Supabase) dengan realtime sync.
+3. **Checkout manual rentan kesalahan** — Proses checkout via chat/telepon menyebabkan kesalahan stok dan pesanan.
+   - *Solusi:* Checkout terintegrasi via RPC `checkout_cart` (transaksi atomik).
+4. **Tidak ada validasi keamanan data** — Tidak ada pembatasan akses antar role.
+   - *Solusi:* RLS (Row Level Security) per-tabel di Supabase.
+
+### Stakeholder Analysis
+
+| Stakeholder | Kebutuhan | Solusi di Sistem |
+|---|---|---|
+| **Customer** | Cari sparepart dengan mudah, beli online, lacak pesanan | TF-IDF search, cloud cart, checkout, riwayat pesanan |
+| **Admin** | Kelola produk, verifikasi pembayaran, laporan penjualan | CRUD sparepart, kelola pesanan, sales report + CSV export |
+| **Owner Toko** | Evaluasi bisnis, laporan penjualan | Omset terverifikasi, filter tanggal/status, export CSV |
+| **Sistem** | Integritas data, konsistensi stok, keamanan | RPC transaction, RLS, signed URL, stock cap |
+
+### Non-Functional Requirements (NFR)
+
+| ID | Aspek | Target | Implementasi |
+|---|---|---|---|
+| NFR-01 | Performa search | < 50 ms per query | TF-IDF client-side, O(N) per query |
+| NFR-02 | Performa load katalog | Render < 2 detik | FutureBuilder + Supabase REST, pagination via limit |
+| NFR-03 | Realtime latency | < 3 detik | Supabase Realtime (WebSocket), live sync cart & orders |
+| NFR-04 | Keandalan checkout | Tidak ada partial failure | RPC `checkout_cart` atomic transaction (rollback jika gagal) |
+| NFR-05 | Keamanan | Data isolation per-role | RLS per-tabel, signed URL 5 menit, CSV injection protection |
+| NFR-06 | Offline | Tidak crash, pesan error jelas | State lokal konsisten, sync menyusul saat koneksi pulih |
+| NFR-07 | Scalability | Supabase managed | Connection pooling otomatis, Postgres managed |
+
+### Alternative Scenarios (Exception Handling)
+
+| Skenario | Kondisi | Handling |
+|---|---|---|
+| **Checkout gagal (stok habis)** | Stok berkurang di tengah checkout | RPC `checkout_cart` rollback seluruh transaksi, customer kembali ke keranjang |
+| **Upload bukti gagal** | Network error saat upload | Customer bisa retry upload, bukti lama tetap tersimpan |
+| **Admin reject pembayaran** | Bukti tidak valid | Status payment → 'rejected', customer bisa upload ulang |
+| **Sesi kedaluwarsa** | Token expired saat aksi | Arahkan ke login, tidak crash |
+| **Jaringan putus** | Airplane mode saat buka katalog | Aplikasi tidak crash, pesan error jelas, state lokal konsisten |
+| **Order cancelled** | Admin batalkan order | Status → 'cancelled', tidak dihitung dalam omset |
+
+---
+
 ## Desain Proyek — Unified Modeling System (20 poin)
 
 ### Use Case Diagram
