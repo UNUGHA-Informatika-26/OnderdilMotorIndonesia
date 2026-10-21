@@ -37,8 +37,7 @@ Tujuan pengujian: membuktikan setiap fungsionalitas utama berjalan sesuai spesif
 | Stakeholder | Kebutuhan | Solusi di Sistem |
 |---|---|---|
 | **Customer** | Cari sparepart dengan mudah, beli online, lacak pesanan | TF-IDF search, cloud cart, checkout, riwayat pesanan |
-| **Admin** | Kelola produk, verifikasi pembayaran, laporan penjualan | CRUD sparepart, kelola pesanan, sales report + CSV export |
-| **Owner Toko** | Evaluasi bisnis, laporan penjualan | Omset terverifikasi, filter tanggal/status, export CSV |
+| **Admin** (juga berperan sebagai Owner Toko) | Kelola produk, verifikasi pembayaran, laporan penjualan, evaluasi bisnis | CRUD sparepart, kelola pesanan, sales report + CSV export, filter tanggal/status |
 | **Sistem** | Integritas data, konsistensi stok, keamanan | RPC transaction, RLS, signed URL, stock cap |
 
 ### Non-Functional Requirements (NFR)
