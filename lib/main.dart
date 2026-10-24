@@ -225,6 +225,8 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
   onPressed: () {
     cartBloc.events.add(const CartLocalCleared());
     authBloc.events.add(const AuthLogoutRequested());
+    // BLoC singleton tetap hidup; AuthBloc._onLogout() emit AuthUnauthenticated()
+    // -> AuthGate otomatis redirect ke LoginPage. State bersih tanpa recreate.
   },
 ),
         ],

@@ -68,7 +68,8 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> _checkout(CartLoaded cartState) async {
     if (cartState.isEmpty) return;
-    if (!_formKey.currentState!.validate()) return;
+    final form = _formKey.currentState;
+    if (form == null || !form.validate()) return;
     if (_selectedShippingId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pilih metode pengiriman dulu')),
