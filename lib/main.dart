@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import 'auth_pages.dart';
 import 'admin_page.dart';
@@ -9,6 +9,7 @@ import 'cart_screen.dart';
 import 'order_history_screen.dart';
 import 'search_helper.dart';
 import 'splash_screen.dart';
+import 'bloc/bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,10 @@ Future<void> main() async {
 
 final supabase = Supabase.instance.client;
 
+// BLoC instances (singleton, shared across app)
+final authBloc = AuthBloc();
+final cartBloc = CartBloc();
+
 class OEMCatalogApp extends StatelessWidget {
   const OEMCatalogApp({super.key});
 
@@ -44,17 +49,36 @@ class OEMCatalogApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  @override
+  void initState() {
+    super.initState();
+    authBloc.events.add(const AuthCheckRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<AuthState>(
-      stream: supabase.auth.onAuthStateChange,
+      stream: authBloc.state,
+      initialData: authBloc.currentState,
       builder: (context, snapshot) {
-        final session = supabase.auth.currentSession;
-        if (session == null) return const LoginPage();
-        return RoleRouter(key: ValueKey(session.user.id));
+        final state = snapshot.data ?? const AuthInitial();
+        if (state is AuthInitial || state is AuthLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (state is AuthAuthenticated) {
+          return RoleRouter(key: ValueKey(state.userId));
+        }
+        return const LoginPage();
       },
     );
   }
@@ -119,8 +143,8 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
   @override
   void initState() {
     super.initState();
-    // Sinkronkan keranjang belanja yang tersimpan di database untuk user yang sedang login
-    CartModel.instance.loadCartFromDatabase();
+    // Sinkronkan keranjang belanja via BLoC (Event → BLoC → State → UI)
+    cartBloc.events.add(const CartLoadRequested());
   }
 
   @override
@@ -153,10 +177,12 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
               MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
             ),
           ),
-          AnimatedBuilder(
-            animation: CartModel.instance,
-            builder: (context, _) {
-              final count = CartModel.instance.totalCount;
+          StreamBuilder<CartState>(
+            stream: cartBloc.state,
+            initialData: cartBloc.currentState,
+            builder: (context, snapshot) {
+              final cartState = snapshot.data;
+              final count = cartState is CartLoaded ? cartState.totalCount : 0;
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -197,8 +223,8 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
           IconButton(
   icon: const Icon(Icons.logout),
   onPressed: () {
-    CartModel.instance.clearLocal();
-    supabase.auth.signOut();
+    cartBloc.events.add(const CartLocalCleared());
+    authBloc.events.add(const AuthLogoutRequested());
   },
 ),
         ],

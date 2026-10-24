@@ -39,6 +39,9 @@ dependencies:
   # Dipakai eksplisit untuk mock local storage Supabase di unit test
   # (test/cart_model_test.dart) — selama ini hanya terpasang transitif.
   shared_preferences: ^2.5.5
+  # State management: BLoC pattern (Event → Stream → State → UI)
+  # Implementasi menggunakan StreamController (built-in Dart), tanpa dependency eksternal.
+  # Pola: Event → BLoC → State → UI (unidirectional data flow)
 
 dev_dependencies:
   flutter_test:

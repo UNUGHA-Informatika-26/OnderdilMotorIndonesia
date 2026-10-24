@@ -11,25 +11,24 @@ Screen & Flow:
 2. Katalog Customer:
    - Header: Halo [User], icon history, cart badge merah, logout.
    - Search bar: Filter instan + icon search.
-   - Grid 2-kolom: Foto produk (1:1), nama part, PN badge, harga bold hijau ($XX), stok, button "+ Tambah" (disabled jika stok 0).
+   - Grid 2-kolom: Foto produk (1:1), nama part, PN badge, harga bold hijau (Rp XX), stok, button "+ Tambah" (disabled jika stok 0).
 3. Keranjang & Checkout:
-   - List item: Foto mini, nama, subtotal ($price x qty), stepper [-] qty [+].
+   - List item: Foto mini, nama, subtotal (Rp price x qty), stepper [-] qty [+].
    - Form pengiriman: Nama, nomor telepon, alamat, kurir delivery.
    - Sticky bottom bar: Total bayar + button "Checkout".
 4. Riwayat & Upload Bukti:
    - Card order: #ID, tanggal, total, status chip (Menunggu/Selesai/Dibatalkan).
    - Button "Upload Bukti Transfer" & status verifikasi bayar.
-5. Panel Staff Gudang (warehouse):
-   - Header: Staff Gudang. List part dengan tombol fokus "Update Stok" (tanpa tombol hapus/ubah harga).
-   - Modal input jumlah stok fisik baru.
-6. Panel Super Admin (admin):
+5. Panel Admin:
    - Header: Admin + FAB "+ Tambah Sparepart" merah.
    - List sparepart: Aksi edit lengkap & delete merah.
    - Modal form: Foto, nama, PN, kategori, harga, stok.
-7. Kelola Pesanan (Admin/Staff):
+6. Kelola Pesanan (Admin):
    - List order realtime, status chip, button preview bukti bayar.
-   - Khusus Admin: Button hijau "Verifikasi" & merah "Tolak".
-8. Laporan Penjualan (Admin):
+   - Button hijau "Verifikasi" & merah "Tolak" (hanya jika status pending & bukti uploaded).
+7. Laporan Penjualan (Admin):
    - Filter tanggal & status order.
    - 2 Box metrik: Total Pesanan & Omset Sukses.
    - List transaksi + modal "Export CSV / Salin Clipboard".
+
+Catatan: Role warehouse sudah dihapus. Update stok dilakukan oleh admin.

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'cart_helper.dart';
 import 'payment_upload_screen.dart';
+import 'bloc/bloc.dart';
+import 'main.dart' show cartBloc;
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -11,7 +13,6 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final _cart = CartModel.instance;
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -40,8 +41,33 @@ class _CartScreenState extends State<CartScreen> {
     super.dispose();
   }
 
-  Future<void> _checkout() async {
-    if (_cart.isEmpty) return;
+  Widget _summaryRow(String label, double amount, {bool isTotal = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isTotal ? null : Colors.grey[600],
+                fontWeight: isTotal ? FontWeight.bold : null,
+              ),
+            ),
+          ),
+          Text(
+            'Rp ${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontWeight: isTotal ? FontWeight.bold : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _checkout(CartLoaded cartState) async {
+    if (cartState.isEmpty) return;
     if (!_formKey.currentState!.validate()) return;
     if (_selectedShippingId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,7 +80,7 @@ class _CartScreenState extends State<CartScreen> {
     final db = Supabase.instance.client;
 
     try {
-      final itemsPayload = _cart.items
+      final itemsPayload = cartState.items
           .map((i) => {'part_id': i.partId, 'quantity': i.quantity})
           .toList();
 
@@ -66,8 +92,9 @@ class _CartScreenState extends State<CartScreen> {
         'p_shipping_option_id': _selectedShippingId,
       }) as String;
 
-      final total = _cart.totalPrice + _selectedShippingCost;
-      _cart.clear();
+      final total = cartState.totalPrice + _selectedShippingCost;
+      if (!mounted) return;
+      cartBloc.events.add(const CartCleared());
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -93,17 +120,24 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Keranjang')),
-      body: AnimatedBuilder(
-        animation: _cart,
-        builder: (context, _) {
-          if (_cart.isLoading) {
+      body: StreamBuilder<CartState>(
+        stream: cartBloc.state,
+        initialData: cartBloc.currentState,
+        builder: (context, snapshot) {
+          final cartState = snapshot.data;
+          if (cartState is CartLoading || cartState is CartInitial) {
             return const Center(child: CircularProgressIndicator());
           }
-          final items = _cart.items;
+          if (cartState is CartError) {
+            return Center(child: Text('Error: ${cartState.message}'));
+          }
+
+          final cart = cartState as CartLoaded;
+          final items = cart.items;
           if (items.isEmpty) {
             return const Center(child: Text('Keranjang masih kosong.'));
           }
-          return SingleChildScrollView(
+          return Padding(
             padding: const EdgeInsets.all(12),
             child: Form(
               key: _formKey,
@@ -125,18 +159,22 @@ class _CartScreenState extends State<CartScreen> {
                             IconButton(
                               tooltip: 'Kurangi',
                               icon: const Icon(Icons.remove_circle_outline),
-                              onPressed: () => _cart.decrement(item.partId),
+                              onPressed: () => cartBloc.events.add(
+                                CartItemDecremented(item.partId),
+                              ),
                             ),
                             Text('${item.quantity}'),
                             IconButton(
-                              tooltip: 'Tambah',
+                              tooltip: 'Nama',
                               icon: const Icon(Icons.add_circle_outline),
                               onPressed: item.quantity >=
                                       (item.stock < CartModel.maxQuantityPerItem
                                           ? item.stock
                                           : CartModel.maxQuantityPerItem)
                                   ? null
-                                  : () => _cart.increment(item.partId),
+                                  : () => cartBloc.events.add(
+                                        CartItemIncremented(item.partId),
+                                      ),
                             ),
                           ],
                         ),
@@ -145,48 +183,33 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // --- Alamat pengiriman ---
-                  const Text(
-                    'Alamat Pengiriman',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama Penerima',
-                      border: OutlineInputBorder(),
-                      isDense: true,
+                  // --- Ringkasan ---
+                  Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Ringkasan',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          _summaryRow('Subtotal', cart.subtotal),
+                          _summaryRow('Ongkir', _selectedShippingCost),
+                          _summaryRow(
+                            'Total',
+                            cart.totalPrice + _selectedShippingCost,
+                            isTotal: true,
+                          ),
+                        ],
+                      ),
                     ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
                   ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'Nomor Telepon',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _addressController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Alamat Lengkap',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
-                  ),
-                  const SizedBox(height: 16),
 
-                  // --- Pilihan ongkir ---
+                  const SizedBox(height: 8),
+
+                  // --- Metode pengiriman ---
                   const Text(
                     'Metode Pengiriman',
                     style: TextStyle(fontWeight: FontWeight.bold),
@@ -195,104 +218,115 @@ class _CartScreenState extends State<CartScreen> {
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: _shippingOptionsFuture,
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: LinearProgressIndicator(),
+                      if (snapshot.connectionState != ConnectionState.done) {
+                        return const Center(
+                          child: SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         );
                       }
-                      final options = snapshot.data!;
+                      final options = snapshot.data ?? [];
                       if (options.isEmpty) {
-                        return const Text(
-                          'Belum ada metode pengiriman tersedia.',
-                        );
+                        return const Text('Belum ada opsi pengiriman.');
                       }
-                      _selectedShippingId ??= options.first['id'] as String;
-                      _selectedShippingCost =
-                          (options.first['cost'] as num).toDouble();
-
                       return DropdownButtonFormField<String>(
                         initialValue: _selectedShippingId,
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          isDense: true,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          border: UnderlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey)),
                         ),
+                        hint: const Text('Pilih metode pengiriman'),
                         items: options
                             .map(
-                              (o) => DropdownMenuItem(
-                                value: o['id'] as String,
+                              (opt) => DropdownMenuItem<String>(
+                                value: (opt['id'] as num).toString(),
                                 child: Text(
-                                  '${o['name']} — Rp ${(o['cost'] as num).toStringAsFixed(2)}',
+                                  '${opt['name']} — Rp ${(opt['cost'] as num).toStringAsFixed(2)}',
                                 ),
                               ),
                             )
                             .toList(),
-                        onChanged: (value) {
-                          final selected = options.firstWhere(
-                            (o) => o['id'] == value,
+                        onChanged: (v) {
+                          final opt = options.firstWhere(
+                            (o) => (o['id'] as num).toString() == v,
                           );
                           setState(() {
-                            _selectedShippingId = value;
+                            _selectedShippingId = v;
                             _selectedShippingCost =
-                                (selected['cost'] as num).toDouble();
+                                (opt['cost'] as num).toDouble();
                           });
                         },
+                        onSaved: (v) => _selectedShippingId = v,
+                        validator: (v) =>
+                            v == null ? 'Pilih metode pengiriman' : null,
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                  // --- Ringkasan & checkout ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Subtotal'),
-                      Text('Rp ${_cart.totalPrice.toStringAsFixed(2)}'),
-                    ],
+                  // --- Alamat pengiriman ---
+                  const Text(
+                    'Nama',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Ongkir'),
-                      Text('Rp ${_selectedShippingCost.toStringAsFixed(2)}'),
-                    ],
-                  ),
-                  const Divider(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        border: UnderlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey)),
+                        hintText: 'Nama penerima',
                       ),
-                      Text(
-                        'Rp ${(_cart.totalPrice + _selectedShippingCost).toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: _checkingOut ? null : _checkout,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: _checkingOut
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text('Checkout'),
+                  const Text(
+                    'Nomor Telepon',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(
+                        border: UnderlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey)),
+                        hintText: 'Contoh: 081234567890',
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Detail Alamat',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextField(
+                      controller: _addressController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        border: UnderlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: Colors.grey)),
+                        hintText: 'Jl. ... No. ...',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- Tombol checkout ---
+                  FilledButton(
+                    onPressed: _checkingOut ? null : () => _checkout(cart),
+                    child: _checkingOut
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Checkout & Bayar'),
                   ),
                 ],
               ),
