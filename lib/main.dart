@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 import 'auth_pages.dart';
 import 'admin_page.dart';
 import 'profile_helper.dart';
-import 'cart_helper.dart';
 import 'cart_screen.dart';
 import 'order_history_screen.dart';
 import 'search_helper.dart';
@@ -57,10 +58,28 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
+  late final StreamSubscription _supabaseAuthSub;
+
   @override
   void initState() {
     super.initState();
     authBloc.events.add(const AuthCheckRequested());
+
+    // Dengarkan perubahan sesi Supabase (login/logout dari LoginPage yang
+    // memanggil Supabase langsung) agar AuthBloc disinkronkan dan UI
+    // otomatis berpindah ke katalog / login.
+    _supabaseAuthSub = Supabase.instance.client.auth.onAuthStateChange.listen((
+      data,
+    ) {
+      // Sync AuthBloc dengan sesi Supabase terbaru pada setiap perubahan auth.
+      authBloc.events.add(const AuthCheckRequested());
+    });
+  }
+
+  @override
+  void dispose() {
+    _supabaseAuthSub.cancel();
+    super.dispose();
   }
 
   @override
@@ -221,14 +240,14 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
             },
           ),
           IconButton(
-  icon: const Icon(Icons.logout),
-  onPressed: () {
-    cartBloc.events.add(const CartLocalCleared());
-    authBloc.events.add(const AuthLogoutRequested());
-    // BLoC singleton tetap hidup; AuthBloc._onLogout() emit AuthUnauthenticated()
-    // -> AuthGate otomatis redirect ke LoginPage. State bersih tanpa recreate.
-  },
-),
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              cartBloc.events.add(const CartLocalCleared());
+              authBloc.events.add(const AuthLogoutRequested());
+              // BLoC singleton tetap hidup; AuthBloc._onLogout() emit AuthUnauthenticated()
+              // -> AuthGate otomatis redirect ke LoginPage. State bersih tanpa recreate.
+            },
+          ),
         ],
       ),
       body: Column(
@@ -314,12 +333,11 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
                                     ? Image.network(
                                         part['image_url'] as String,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, _, _) =>
-                                            const Icon(
-                                              Icons.build_circle_outlined,
-                                              size: 48,
-                                              color: Colors.blueAccent,
-                                            ),
+                                        errorBuilder: (_, _, _) => const Icon(
+                                          Icons.build_circle_outlined,
+                                          size: 48,
+                                          color: Colors.blueAccent,
+                                        ),
                                       )
                                     : const Icon(
                                         Icons.build_circle_outlined,
@@ -371,12 +389,16 @@ class _PartsCatalogScreenState extends State<PartsCatalogScreen> {
                                 onPressed: (part['stock'] as num? ?? 0) <= 0
                                     ? null
                                     : () {
-                                        CartModel.instance.add(
-                                          partId: part['id'].toString(),
-                                          name: (part['name'] ?? '').toString(),
-                                          price: (part['price'] as num)
-                                              .toDouble(),
-                                          stock: (part['stock'] as num).toInt(),
+                                        cartBloc.events.add(
+                                          CartItemAdded(
+                                            partId: part['id'].toString(),
+                                            name: (part['name'] ?? '')
+                                                .toString(),
+                                            price: (part['price'] as num)
+                                                .toDouble(),
+                                            stock: (part['stock'] as num)
+                                                .toInt(),
+                                          ),
                                         );
                                         ScaffoldMessenger.of(
                                           context,

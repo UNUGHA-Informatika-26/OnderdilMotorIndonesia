@@ -59,7 +59,11 @@ class AuthBloc {
       if (!email.contains('@')) {
         final res = await _db.rpc('get_email_by_username',
             params: {'p_username': email});
-        email = res as String;
+        if (res == null) {
+           _emit(AuthError('Username tidak ditemukan'));
+           return;
+         }
+         email = res as String;
       }
       final response = await _db.auth.signInWithPassword(
         email: email,

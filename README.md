@@ -119,7 +119,7 @@ Lihat detail: [`docs/arsitektur/architecture-design.md`](docs/arsitektur/archite
 | BE | Supabase (Auth, Postgres, Realtime, Storage) |
 | Database | PostgreSQL (via Supabase) |
 | Service | Supabase (Auth, RLS, RPC, Storage, Realtime) |
-| Dependencies | `supabase_flutter` 2.17.2, `image_picker` 1.1.2, `cupertino_icons` 1.0.8 |
+| Dependencies | `supabase_flutter` 2.17.2, `image_picker` 1.2.3, `cupertino_icons` 1.0.9 |
 | Testing | `flutter_test`, `flutter_lints` 6.0.0 |
 
 ---
@@ -127,9 +127,23 @@ Lihat detail: [`docs/arsitektur/architecture-design.md`](docs/arsitektur/archite
 ## State Management
 
 ### Pola yang Digunakan
-- **CartModel** (singleton, `ChangeNotifier`) — state keranjang belanja
+- **BLoC (Business Logic Component)** — state management utama: `CartBloc`, `AuthBloc`
+- **CartModel** (singleton, `ChangeNotifier`) — data layer keranjang belanja (sinkronisasi ke Supabase)
 - **TfIdfSearch** (class murni, tanpa dependensi) — pencarian sparepart
-- **FutureBuilder / StreamBuilder** — untuk data async (orders, parts)
+- **FutureBuilder / StreamBuilder** — untuk data async (orders, parts, role)
+
+### BLoC Pattern (Event → BLoC → State → UI)
+```
+UI → bloc.events.add(CartItemAdded(...))   // Event
+   → CartBloc._mapEventToState()           // BLoC
+   → _emit(CartLoaded(...))                // State
+   → StreamBuilder rebuilds UI            // UI
+```
+- **Event sink**: `StreamSink<CartEvent>` (broadcast) — UI kirim event
+- **State stream**: `Stream<CartState>` (broadcast) — multi-listener aman (catalog badge + cart screen)
+- **Initial state**: `bloc.currentState` digunakan sebagai `initialData` di StreamBuilder
+- **Singleton**: `final authBloc = AuthBloc(); final cartBloc = CartBloc();` di `main.dart` — shared across app
+- **Dispose**: `dispose()` menutup kedua controller di masing-masing BLoC
 
 ### CartModel (Singleton + ChangeNotifier)
 ```
@@ -141,11 +155,11 @@ CartModel.instance → add() → notifyListeners() → UI rebuild
 - **Sync DB**: otomatis jika `uid != null` (login), skip jika `uid == null` (test)
 - **Optimistic update**: update UI dulu, sync ke DB menyusul
 
-### Mengapa ChangeNotifier (bukan Riverpod/BLoC)?
-- Lebih sederhana untuk project skala kecil-menengah
-- Tidak perlu dependency tambahan
-- Cukup untuk state keranjang yang single-source
-- Testable: `Supabase.initialize(url: 'http://localhost', anonKey: 'dummy')` → uid null → sync DB ter-skip
+### Mengapa BLoC (bukan Riverpod/Provider)?
+- Broadcast StreamController mendukung multi-listener tanpa context dependency
+- Event-driven: setiap aksi (tambah/kurangi/checkout) adalah event → state transition jelas
+- Layering: BLoC (UI logic) + CartModel (data layer) terpisah → ganti layer tanpa tumpuk state
+- Testable: event → state mapping mudah diuji tanpa widget
 
 ---
 
@@ -274,6 +288,7 @@ Keamanan data diterapkan dengan **Row Level Security (RLS)** di Supabase.
 | Jenis | Hasil |
 |---|---|
 | Unit test | 43/43 lulus (`flutter test`) |
+| Widget test | 1/1 lulus (`testWidgets`) |
 | RLS matrix | 11 PASS, 0 FAIL (customer + admin) |
 | Manual checklist | 6/8 customer PASS, 5/6 admin PASS |
 | Static analysis | `flutter analyze` — No issues found |

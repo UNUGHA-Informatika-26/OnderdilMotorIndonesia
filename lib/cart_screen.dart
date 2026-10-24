@@ -242,7 +242,7 @@ class _CartScreenState extends State<CartScreen> {
                         items: options
                             .map(
                               (opt) => DropdownMenuItem<String>(
-                                value: (opt['id'] as num).toString(),
+                                value: opt['id'].toString(),
                                 child: Text(
                                   '${opt['name']} — Rp ${(opt['cost'] as num).toStringAsFixed(2)}',
                                 ),
@@ -251,7 +251,7 @@ class _CartScreenState extends State<CartScreen> {
                             .toList(),
                         onChanged: (v) {
                           final opt = options.firstWhere(
-                            (o) => (o['id'] as num).toString() == v,
+                            (o) => o['id'].toString() == v,
                           );
                           setState(() {
                             _selectedShippingId = v;
