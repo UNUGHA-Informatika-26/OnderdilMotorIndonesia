@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'payment_upload_screen.dart';
+import 'app_theme.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -64,7 +65,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             setState(() {
               final idx = _orders.indexWhere((o) => o['id'] == updated['id']);
               if (idx >= 0) {
-                _orders[idx] = updated;
+                // Pertahankan order_items lama jika update event tidak menyertakannya
+                final existingItems = _orders[idx]['order_items'];
+                final updatedRecord = Map<String, dynamic>.from(updated);
+                if (existingItems != null) {
+                  updatedRecord['order_items'] = existingItems;
+                }
+                _orders[idx] = updatedRecord;
               }
             });
           },
@@ -79,72 +86,67 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     }
   }
 
-  String _statusLabel(String status) {
-    switch (status) {
-      case 'completed':
-        return 'Selesai';
-      case 'cancelled':
-        return 'Dibatalkan';
-      default:
-        return 'Menunggu';
-    }
-  }
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'completed':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.orange;
-    }
-  }
-
-  String _paymentLabel(String status) {
-    switch (status) {
-      case 'uploaded':
-        return 'Bukti Terkirim';
-      case 'verified':
-        return 'Pembayaran Terverifikasi';
-      case 'rejected':
-        return 'Bukti Ditolak';
-      default:
-        return 'Belum Bayar';
-    }
-  }
-
-  Color _paymentColor(String status) {
-    switch (status) {
-      case 'uploaded':
-        return Colors.blue;
-      case 'verified':
-        return Colors.green;
-      case 'rejected':
-        return Colors.red;
-      default:
-        return Colors.grey[700]!;
-    }
-  }
-
   String _formatDate(String? iso) {
     final d = DateTime.tryParse(iso ?? '');
     if (d == null) return '';
-    return '${d.day.toString().padLeft(2, '0')}/'
-        '${d.month.toString().padLeft(2, '0')}/${d.year} '
-        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    final m = (d.month >= 1 && d.month <= 12) ? months[d.month - 1] : '';
+    return '${d.day} $m ${d.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Riwayat Pesanan')),
+      appBar: AppBar(
+        title: const Text('Riwayat Pesanan'),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _orders.isEmpty
-              ? const Center(child: Text('Belum ada pesanan.'))
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 76,
+                          height: 76,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.tint,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.receipt_long_outlined,
+                            size: 38,
+                            color: AppTheme.red,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        const Text(
+                          'Belum ada pesanan',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.heading,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Pesanan yang kamu buat akan muncul di halaman ini.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12, color: AppTheme.sub),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               : ListView.builder(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   itemCount: _orders.length,
                   itemBuilder: (context, i) {
                     final order = _orders[i];
@@ -155,89 +157,305 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                     final paymentStatus =
                         order['payment_status'] as String? ?? 'pending';
                     final orderId = order['id'].toString();
+                    final shortId = orderId.length > 8
+                        ? orderId.substring(0, 8).toUpperCase()
+                        : orderId.toUpperCase();
+                    final total = (order['total'] as num? ?? 0).toDouble();
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      child: ExpansionTile(
-                        title: Text('Pesanan #${orderId.substring(0, 8)}'),
-                        subtitle: Text(
-                          '${_formatDate(order['created_at'])}  |  '
-                          'Total: Rp ${(order['total'] as num).toStringAsFixed(2)}',
-                        ),
-                        trailing: Chip(
-                          label: Text(
-                            _statusLabel(status),
-                            style:
-                                const TextStyle(color: Colors.white, fontSize: 11),
+                    final statusLabel = status == 'completed'
+                        ? 'Selesai'
+                        : status == 'cancelled'
+                            ? 'Dibatalkan'
+                            : 'Menunggu';
+
+                    final statusType = status == 'completed'
+                        ? 'success'
+                        : status == 'cancelled'
+                            ? 'danger'
+                            : 'waiting';
+
+                    final isPaymentUploaded = paymentStatus == 'uploaded';
+                    final isPaymentVerified = paymentStatus == 'verified';
+                    final isPaymentRejected = paymentStatus == 'rejected';
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(13),
+                        border: Border.all(color: AppTheme.border),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x08000000),
+                            blurRadius: 10,
+                            offset: Offset(0, 2),
                           ),
-                          backgroundColor: _statusColor(status),
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
+                        ],
+                      ),
+                      child: ExpansionTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        collapsedShape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                        tilePadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '#$shortId',
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontFamily: 'RobotoMono',
+                                    color: AppTheme.sub,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _formatDate(order['created_at']),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.heading,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            AppTheme.statusBadge(statusLabel, type: statusType),
+                          ],
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Total pembayaran',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: AppTheme.sub,
+                                ),
+                              ),
+                              Text(
+                                AppTheme.formatRupiah(total),
+                                style: const TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.green,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         children: [
+                          const Divider(color: AppTheme.border, height: 1),
+                          // List item
                           ...items.map(
-                            (item) => ListTile(
-                              dense: true,
-                              title: Text(item['part_name'] ?? ''),
-                              trailing: Text(
-                                '${item['quantity']} x '
-                                'Rp ${(item['price'] as num).toStringAsFixed(2)}',
+                            (item) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item['part_name'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.heading,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${item['quantity']} × ${AppTheme.formatRupiah((item['price'] as num? ?? 0))}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.sub,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                          const Divider(height: 1),
+                          const Divider(color: AppTheme.border, height: 1),
+
+                          // Alamat Pengiriman & Status Pembayaran Box
                           Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                const Text(
+                                  'Penerima & Alamat',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.heading,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
                                 Text(
-                                  'Dikirim ke: ${order['shipping_name'] ?? '-'}',
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                  '${order['shipping_name'] ?? '-'} · ${order['shipping_phone'] ?? '-'}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.sub,
+                                  ),
                                 ),
-                                Text(order['shipping_address'] ?? '-'),
-                                Text(order['shipping_phone'] ?? '-'),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Text('Status Pembayaran: '),
-                                    Chip(
-                                      label: Text(
-                                        _paymentLabel(paymentStatus),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                      backgroundColor: _paymentColor(paymentStatus),
-                                      padding: EdgeInsets.zero,
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ],
+                                Text(
+                                  order['shipping_address'] ?? '-',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.sub,
+                                  ),
                                 ),
-                                if (paymentStatus == 'pending' ||
-                                    paymentStatus == 'rejected') ...[
-                                  const SizedBox(height: 8),
-                                  OutlinedButton.icon(
-                                    onPressed: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => PaymentUploadScreen(
-                                            orderId: orderId,
-                                            totalAmount:
-                                                (order['total'] as num).toDouble(),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.upload_outlined),
-                                    label: Text(
-                                      paymentStatus == 'rejected'
-                                          ? 'Upload Ulang Bukti'
-                                          : 'Upload Bukti Transfer',
+                                const SizedBox(height: 12),
+
+                                // Payment Status Box (sesuai Figma .payment)
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFAFAFA),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: const Color(0xFFECECE8),
                                     ),
                                   ),
-                                ],
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              color: isPaymentVerified
+                                                  ? AppTheme.green
+                                                  : isPaymentRejected
+                                                      ? AppTheme.red
+                                                      : isPaymentUploaded
+                                                          ? AppTheme.info
+                                                          : AppTheme.amber,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: isPaymentVerified
+                                                      ? AppTheme.greenBg
+                                                      : isPaymentRejected
+                                                          ? AppTheme.tint
+                                                          : AppTheme.amberBg,
+                                                  blurRadius: 4,
+                                                  spreadRadius: 2,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  isPaymentVerified
+                                                      ? 'Pembayaran Terverifikasi'
+                                                      : isPaymentUploaded
+                                                          ? 'Bukti Terkirim'
+                                                          : isPaymentRejected
+                                                              ? 'Bukti Pembayaran Ditolak'
+                                                              : 'Menunggu Bukti Bayar',
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppTheme.heading,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  isPaymentVerified
+                                                      ? 'Pesanan sedang diproses'
+                                                      : isPaymentUploaded
+                                                          ? 'Akan diverifikasi oleh admin'
+                                                          : isPaymentRejected
+                                                              ? 'Foto bukti tidak valid, silakan upload ulang'
+                                                              : 'Segera lakukan transfer dan upload bukti',
+                                                  style: const TextStyle(
+                                                    fontSize: 9.5,
+                                                    color: AppTheme.sub,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (!isPaymentVerified &&
+                                          status != 'cancelled') ...[
+                                        const SizedBox(height: 10),
+                                        SizedBox(
+                                          height: 38,
+                                          child: ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  isPaymentUploaded
+                                                      ? Colors.white
+                                                      : AppTheme.red,
+                                              foregroundColor:
+                                                  isPaymentUploaded
+                                                      ? AppTheme.heading
+                                                      : Colors.white,
+                                              side: isPaymentUploaded
+                                                  ? const BorderSide(
+                                                      color: AppTheme.border,
+                                                    )
+                                                  : null,
+                                            ),
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) =>
+                                                      PaymentUploadScreen(
+                                                    orderId: orderId,
+                                                    totalAmount: total,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                            icon: Icon(
+                                              isPaymentUploaded
+                                                  ? Icons.check
+                                                  : Icons.upload_outlined,
+                                              size: 16,
+                                              color: isPaymentUploaded
+                                                  ? AppTheme.green
+                                                  : Colors.white,
+                                            ),
+                                            label: Text(
+                                              isPaymentUploaded
+                                                  ? 'Ganti / Upload Ulang Bukti'
+                                                  : 'Upload Bukti Transfer',
+                                              style: const TextStyle(
+                                                fontSize: 11.5,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),
